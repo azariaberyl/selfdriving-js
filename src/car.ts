@@ -30,7 +30,7 @@ export default class Car {
 
   update() {
     if (this.controller.forward) {
-      this.speed -= this.acceleration;
+      this.speed -= this.acceleration + 5;
     }
     if (this.controller.reverse) {
       this.speed += this.acceleration;
