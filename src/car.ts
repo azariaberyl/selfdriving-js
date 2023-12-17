@@ -1,5 +1,6 @@
 import Controller from './controller';
 import Sensor from './sensor';
+import { polyIntersect } from './utils';
 
 export default class Car {
   x: number;
@@ -13,6 +14,8 @@ export default class Car {
   friction: number;
   angle: number;
   sensor: Sensor;
+  polygon: { x: number; y: number }[] = [];
+  damaged: boolean;
 
   constructor(x: number, y: number, width: number, height: number) {
     this.x = x;
@@ -24,6 +27,7 @@ export default class Car {
     this.speed = 0;
     this.maxSpeed = 5;
     this.friction = 0.3;
+    this.damaged = false;
 
     this.angle = 0;
 
@@ -32,8 +36,45 @@ export default class Car {
   }
 
   update(roadBorders: { x: number; y: number }[][]) {
-    this.#move();
+    debugger;
+    if (!this.damaged) {
+      this.#move();
+      this.damaged = this.#assesDamage(roadBorders);
+      this.polygon = this.#createPolygon(roadBorders);
+    }
     this.sensor.update(roadBorders);
+  }
+  #assesDamage(roadBorders: { x: number; y: number }[][]): boolean {
+    for (let i = 0; i < roadBorders.length; i++) {
+      if (polyIntersect(this.polygon, roadBorders[i])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  #createPolygon(roadBorders: { x: number; y: number }[][]) {
+    const points = [];
+    const rad = Math.hypot(this.width, this.height) / 2;
+    const alpha = Math.atan2(this.width, this.height);
+    points.push({
+      x: this.x - rad * Math.sin(this.angle + alpha),
+      y: this.y - rad * Math.cos(this.angle + alpha),
+    });
+
+    points.push({
+      x: this.x - rad * Math.sin(this.angle - alpha),
+      y: this.y - rad * Math.cos(this.angle - alpha),
+    });
+    points.push({
+      x: this.x + rad * Math.sin(this.angle + alpha),
+      y: this.y + rad * Math.cos(this.angle + alpha),
+    });
+    points.push({
+      x: this.x + rad * Math.sin(this.angle - alpha),
+      y: this.y + rad * Math.cos(this.angle - alpha),
+    });
+    return points;
   }
 
   #move() {
@@ -73,15 +114,17 @@ export default class Car {
 
   draw(ctx: CanvasRenderingContext2D | null) {
     if (ctx === null) return;
-    ctx.save();
-
-    ctx.translate(this.x, this.y);
     ctx.beginPath();
-    ctx.rotate(-this.angle);
-    ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height);
+    if (this.damaged) {
+      ctx.fillStyle = 'red';
+    } else {
+      ctx.fillStyle = 'green';
+    }
+    ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
+    for (let index = 1; index < this.polygon.length; index++) {
+      ctx.lineTo(this.polygon[index].x, this.polygon[index].y);
+    }
     ctx.fill();
-
-    ctx.restore();
     this.sensor.draw(ctx);
   }
 }

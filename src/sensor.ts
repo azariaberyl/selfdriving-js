@@ -66,7 +66,6 @@ export default class Sensor {
       if (reading) {
         end = reading;
       }
-      debugger;
       ctx.lineWidth = 2;
       ctx.strokeStyle = 'yellow';
       ctx.beginPath();
