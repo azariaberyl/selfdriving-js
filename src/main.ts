@@ -13,7 +13,7 @@ animate();
 
 function animate() {
   if (ctx === null) return;
-  car.update();
+  car.update(road.borders);
 
   canvas.height = window.innerHeight;
 

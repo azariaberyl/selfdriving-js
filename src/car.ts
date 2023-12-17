@@ -1,4 +1,5 @@
 import Controller from './controller';
+import Sensor from './sensor';
 
 export default class Car {
   x: number;
@@ -11,6 +12,7 @@ export default class Car {
   maxSpeed: number;
   friction: number;
   angle: number;
+  sensor: Sensor;
 
   constructor(x: number, y: number, width: number, height: number) {
     this.x = x;
@@ -26,9 +28,15 @@ export default class Car {
     this.angle = 0;
 
     this.controller = new Controller();
+    this.sensor = new Sensor(this);
   }
 
-  update() {
+  update(roadBorders: { x: number; y: number }[][]) {
+    this.#move();
+    this.sensor.update(roadBorders);
+  }
+
+  #move() {
     if (this.controller.forward) {
       this.speed -= this.acceleration + 5;
     }
@@ -66,11 +74,14 @@ export default class Car {
   draw(ctx: CanvasRenderingContext2D | null) {
     if (ctx === null) return;
     ctx.save();
+
     ctx.translate(this.x, this.y);
     ctx.beginPath();
     ctx.rotate(-this.angle);
     ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height);
     ctx.fill();
+
     ctx.restore();
+    this.sensor.draw(ctx);
   }
 }
